@@ -13,23 +13,21 @@ Node* buildTree(int* inorder, int* preorder, int inorder_start, int inorder_end)
     if (inorder_start > inorder_end) {
         return NULL;
     }
-    
+    static int cur = 0;
     Node *root = (Node*) malloc(sizeof(Node));
-    
+    root->data = preorder[cur++];
     if (inorder_start == inorder_end) {
-        root->data = *preorder;
         root->left = NULL;
         root->right = NULL;
     }
     else {
-        //finding the position of "D"
-        int i = 0;
-        while (*(inorder + inorder_start + i) != *preorder) {
+        //finding the position of "root->data"
+        int i = inorder_start;
+        while (inorder[i] != root->data) {
             i++;
         }
-        root->data = *preorder;
-        root->left = buildTree(inorder, preorder + 1, inorder_start, inorder_start + i - 1);
-        root->right = buildTree(inorder, preorder + i + 1, inorder_start + i + 1, inorder_end);
+        root->left = buildTree(inorder, preorder, inorder_start, i - 1);
+        root->right = buildTree(inorder, preorder, i + 1, inorder_end);
     }
     return root;
 }
