@@ -11,6 +11,10 @@
 #include <stdlib.h>
 #include "function.h"
 
+char expr[MAXEXPR];
+int pos;
+char sym[NUMSYM];
+
 int main(void){
     sym[0]='A';
     sym[1]='B';

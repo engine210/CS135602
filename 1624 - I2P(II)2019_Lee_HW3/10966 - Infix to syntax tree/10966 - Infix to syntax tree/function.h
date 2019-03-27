@@ -12,11 +12,11 @@
 #define MAXEXPR 256
 #define NUMSYM 6
 
-char expr[MAXEXPR];  // string to store the input expression.
-int pos;             // current position of parsing, from end to start
+extern char expr[MAXEXPR];  // string to store the input expression.
+extern int pos;             // current position of parsing, from end to start
 
 typedef enum {ID_A, ID_B, ID_C, ID_D, OP_AND, OP_OR} TokenSet;
-char sym[NUMSYM];
+extern char sym[NUMSYM];
 
 typedef struct _Node {
     TokenSet data;
