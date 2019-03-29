@@ -45,6 +45,113 @@ void printList(Node* head) {
     printf("\n");
 }
 
+Node* move_on(Node* A, Node* B, Node* head) {
+    
+    //prevent illegal case
+    if (A == B || A == NULL || B == NULL) {
+        return head;
+    }
+    
+    //remove node A from the original link list
+    if (A == head) {            // A is the head
+        head = A->next;
+        head->prev = NULL;
+    }
+    else if (A->next == NULL){  // A is the tail
+        A->prev->next = NULL;
+    }
+    else {
+        A->prev->next = A->next;
+        A->next->prev = A->prev;
+    }
+    
+    //insert node A after node B
+    if (B->next == NULL) {      // B is the tail
+        B->next = A;
+        A->next = NULL;
+        A->prev = B;
+    }
+    else {
+        A->next = B->next;
+        B->next->prev = A;
+        B->next = A;
+        A->prev = B;
+    }
+    
+    return head;
+}
+
+Node* move_under(Node* A, Node* B, Node* head) {
+    
+    //prevent illegal case
+    if (A == B || A == NULL || B == NULL) {
+        return head;
+    }
+    
+    //remove node A from the original link list
+    if (A == head) {            // A is the head
+        head = A->next;
+        head->prev = NULL;
+    }
+    else if (A->next == NULL){  // A is the tail
+        A->prev->next = NULL;
+    }
+    else {
+        A->prev->next = A->next;
+        A->next->prev = A->prev;
+    }
+    
+    //insert node A infront of node B
+    if (B == head) {      // B is the tail
+        A->next = B;
+        B->prev = A;
+        A->prev = NULL;
+        head = A;
+    }
+    else {
+        A->next = B;
+        B->prev->next = A;
+        A->prev = B->prev;
+        B->prev = A;
+    }
+    
+    return head;
+}
+
+Node* remove_Node(Node** A, Node* head) {
+    
+    //prevent illegal case
+    if (*A == NULL) {
+        return head;
+    }
+    
+    //remove node A from the original link list
+    if ((*A)->prev == NULL && (*A)->next == NULL) {    // if the list only has a single node
+        free(*A);
+        *A = NULL;
+        head = NULL;
+    }
+    else if (*A == head) {                        // A is the head
+        head = (*A)->next;
+        head->prev = NULL;
+        free(*A);
+        *A = NULL;
+    }
+    else if ((*A)->next == NULL){                   // A is the tail
+        (*A)->prev->next = NULL;
+        free(*A);
+        *A = NULL;
+    }
+    else {
+        (*A)->prev->next = (*A)->next;
+        (*A)->next->prev = (*A)->prev;
+        free(*A);
+        *A = NULL;
+    }
+    
+    return head;
+}
+
 int main(int argc, const char * argv[]) {
     
     Node* head;
@@ -56,66 +163,19 @@ int main(int argc, const char * argv[]) {
     while (command[0] != 'e') {
         if (command[0] == 'm') {
             scanf("%d %s %d", &bookA, command, &bookB);
-            if (books[bookA] != NULL && books[bookB] != NULL && bookA != bookB) {
+            if (bookA < n && bookB < n) {
                 if (command[0] == 'o') {
-                    if (books[bookA] == head) {
-                        head = books[bookA]->next;
-                        head->prev = NULL;
-                        books[bookA]->next = books[bookB]->next;
-                        books[bookB]->next = books[bookA];
-                        if (books[bookA]->next != NULL) {
-                            books[bookA]->next->prev = books[bookA];
-                        }
-                        books[bookA]->prev = books[bookB];
-                    }
-                    else {
-                        books[bookA]->prev->next = books[bookA]->next;
-                        books[bookA]->prev->next->prev = books[bookA]->prev;
-                        books[bookA]->next = books[bookB]->next;
-                        books[bookA]->prev = books[bookB];
-                        books[bookB]->next = books[bookA];
-                        if (books[bookA]->next != NULL) {
-                            books[bookA]->next->prev = books[bookA];
-                        }
-                    }
+                    head = move_on(books[bookA], books[bookB], head);
                 }
                 else if(command[0] == 'u') {
-                    if (books[bookA] == head) {
-                        head = books[bookA]->next;
-                        head->prev = NULL;
-                        books[bookA]->next = books[bookB];
-                        books[bookB]->prev->next = books[bookA];
-                        if (books[bookA]->next != NULL) {
-                            books[bookA]->next->prev = books[bookA];
-                        }
-                        books[bookA]->prev = books[bookB]->prev;
-                    }
-                    else {
-                        books[bookA]->prev->next = books[bookA]->next;
-                        books[bookA]->prev->next->prev = books[bookA]->prev;
-                        books[bookA]->next = books[bookB];
-                        books[bookB]->prev->next = books[bookA];
-                        if (books[bookA]->next != NULL) {
-                            books[bookA]->next->prev = books[bookA];
-                        }
-                        books[bookA]->prev = books[bookB]->prev;
-                    }
+                    head = move_under(books[bookA], books[bookB], head);
                 }
             }
         }
         else if (command[0] == 'r') {
             scanf("%d", &bookA);
-            if (books[bookA] != NULL) {
-                if (books[bookA] == head) {
-                    head = head->next;
-                    free(head->prev);
-                    head->prev = NULL;
-                }
-                else {
-                    books[bookA]->next->prev = books[bookA]->prev;
-                    books[bookA]->prev = books[bookA]->next;
-                    free(books[bookA]);
-                }
+            if (bookA < n) {
+                head = remove_Node(&(books[bookA]), head);
             }
         }
         scanf("%s", command);
