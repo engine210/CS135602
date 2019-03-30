@@ -6,9 +6,14 @@
 //  Copyright © 2019 engine210. All rights reserved.
 //
 
-#ifndef function_h
-#define function_h
+#ifndef __FUNCTION_H__
+#define __FUNCTION_H__
 
-#include <stdio.h>
+typedef struct _Node {
+    int data;
+    struct _Node *next;
+} Node;
+
+void rotateList(Node**,int);
 
 #endif /* function_h */

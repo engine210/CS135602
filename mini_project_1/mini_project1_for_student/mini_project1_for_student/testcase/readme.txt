@@ -1,0 +1,1 @@
+這裡的input是以輸入的方式餵給你們寫的程式，然後你們需要產生asm output，testcase裡的output並非唯一答案，只需要產生的asm output丟給parser程式，最後的輸出一樣就可以了(parser程式會多輸出所花費的clock，要檢查輸出是否一樣，可以看一下parser_testcase的output或者parser程式所輸出的最下面)

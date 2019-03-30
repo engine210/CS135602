@@ -1,0 +1,1 @@
+此處的input是asm，也就是testcase裡的output

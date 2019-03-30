@@ -1,0 +1,1 @@
+執行程式時，需要給入三個參數(int)去initialize mem[0] mem[4] mem[8]的初始值，分別對應x y z的初始值，不同的初始值會使有些input最後的答案不一樣，前一個目錄的parser_testcase皆是以初始值為0，所產生的output
