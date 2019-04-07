@@ -6,13 +6,11 @@
 #include "lex.h"
 /*
 Something like Python
-
 >> y = 2
 >> z = 2
 >> x = 3*y + 4/(2*z)
 
 */
-
 
 /*
 the only type: integer
@@ -24,8 +22,6 @@ everything is an expression
   term_tail := MULDIV factor term_tail | NIL
   factor      := INT | ADDSUB INT | ADDSUB ID | ID ASSIGN expr | ID | LPAREN expr RPAREN
 */
-
-
 
 #define TBLSIZE 65535
 typedef struct {
