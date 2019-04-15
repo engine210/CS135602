@@ -394,7 +394,7 @@ void error(ErrorType errorNum) {
      case NAN:
      fprintf(stderr, "Not a number\n");
      }
-    */
+     */
     flag = 1;
 }
 

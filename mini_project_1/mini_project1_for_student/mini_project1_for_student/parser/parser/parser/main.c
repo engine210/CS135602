@@ -385,7 +385,7 @@ int main(int argc,char **argv)
     /// comment here to read input from stander input or file
     /// comment here to read input from stander input or file
     freopen("input.txt","r",stdin);
-    freopen("output.txt","w",stdout);
+    //freopen("output.txt","w",stdout);
     
     INST *inst;
     int r[8],state;

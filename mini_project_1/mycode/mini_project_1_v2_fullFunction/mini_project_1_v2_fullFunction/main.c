@@ -1,40 +1,28 @@
 //
 //  main.c
-//  mini_project_1_v1_submit
+//  mini_project_1_v2_fullFunction
 //
-//  Created by engine210 on 2019/4/7.
+//  Created by engine210 on 2019/4/13.
 //  Copyright © 2019 engine210. All rights reserved.
 //
 
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
-#define MAXLEN 256
-#define TBLSIZE 65535
+#include "lex.h"
 
-typedef enum {UNKNOWN, END, INT, ID, ADDSUB, MULDIV, ASSIGN, LPAREN, RPAREN, AND, OR, XOR} TokenSet;
+/*
+ the only type: integer
+ everything is an expression
+ statement   := END | expr END
+ expr        := term expr_tail
+ expr_tail   := ADDSUB term expr_tail | NIL
+ term        := factor term_tail
+ term_tail := MULDIV factor term_tail | NIL
+ factor      := INT | ADDSUB INT | ADDSUB ID | ID ASSIGN expr | ID | LPAREN expr RPAREN
+ */
 
-typedef struct {
-    char name[MAXLEN];
-    int val;
-} Symbol;
+Symbol table[TBLSIZE];
+int sbcount = 0;
+int reg_available[8]; //indicate r0~r7 is available or not
 
-typedef struct _Node {
-    char lexeme[MAXLEN];
-    TokenSet token;
-    int val;
-    struct _Node *left, *right;
-} BTNode;
-
-//function from lex
-int match (TokenSet token);
-void advance(void);
-char* getLexeme(void);
-TokenSet getToken(void);
-TokenSet lookahead = UNKNOWN;
-
-//recursion function to build syntax tree
 void statement(void);
 BTNode* bit_or(void);
 BTNode* bit_xor(void);
@@ -42,23 +30,19 @@ BTNode* bit_and(void);
 BTNode* expr(void);
 BTNode* term(void);
 BTNode* factor(void);
-
-//assistant function
 BTNode* makeNode(TokenSet, const char*);
 int getval(void);
 int setval(char*, int);
 void freeTree(BTNode*);
 void printPrefix(BTNode*);
-void table_init(void);
-int printAssemble(BTNode* root);
+int evaluateTree(BTNode*);
+void error(ErrorType errorNum);
 
-//some local variable
-char lexeme[MAXLEN];
-Symbol table[TBLSIZE];
-int sbcount = 0;
-int reg_available[8]; //indicate r0~r7 is available or not
-int syntax_error = 0;
-int firstID; //this ID is first ID appear in this expression or not
+int printAssemble(BTNode* root);
+void table_init(void);
+
+int flag = 0;
+int firstID;
 
 int main(int argc, char* argv[]) {
     char c;
@@ -66,127 +50,29 @@ int main(int argc, char* argv[]) {
     freopen("input.txt", "r", stdin);
     table_init();
     
-    while (scanf("%c", &c) != EOF) {    //to determine whether the input is end
+    while (scanf("%c", &c) != EOF) {
         ungetc(c, stdin);
         firstID = 1;
-        for (i = 0; i < 8; i++) reg_available[i] = 1;   //set all register usable
+        for (i = 0; i < 8; i++) reg_available[i] = 1;
         statement();
-        if (syntax_error) {
+        if (flag) {
             printf("EXIT 1\n");
             break;
         }
     }
-    
-    if (!syntax_error) {
+    /*
+    if (!flag) {
         printf("MOV r0 [0]\n");
         printf("MOV r1 [4]\n");
         printf("MOV r2 [8]\n");
         printf("EXIT 0\n");
     }
-    
+    */
     return 0;
 }
 
-//get a token from the input, save the token in lexeme and return the type of token
-TokenSet getToken(void) {
-    int i;
-    char c;
-    
-    while ((c = fgetc(stdin)) == ' ' || c == '\t');  // eat white space and tab
-    
-    if (isdigit(c)) {
-        lexeme[0] = c;
-        c = fgetc(stdin);
-        i = 1;
-        while (isdigit(c) && i < MAXLEN) {
-            lexeme[i] = c;
-            i++;
-            c = fgetc(stdin);
-        }
-        ungetc(c, stdin);
-        lexeme[i] = '\0';
-        return INT;
-    }
-    else if (c == '|') {
-        lexeme[0] = c;
-        lexeme[1] = '\0';
-        return OR;
-    }
-    else if (c == '^') {
-        lexeme[0] = c;
-        lexeme[1] = '\0';
-        return XOR;
-    }
-    else if (c == '&') {
-        lexeme[0] = c;
-        lexeme[1] = '\0';
-        return AND;
-    }
-    else if (c == '+' || c == '-') {
-        lexeme[0] = c;
-        lexeme[1] = '\0';
-        return ADDSUB;
-    }
-    else if (c == '*' || c == '/') {
-        lexeme[0] = c;
-        lexeme[1] = '\0';
-        return MULDIV;
-    }
-    else if (c == '\n') {
-        lexeme[0] = '\0';
-        return END;
-    }
-    else if (c == '=') {
-        lexeme[0] = c;
-        lexeme[1] = '\0';
-        return ASSIGN;
-    }
-    else if (c == '(') {
-        lexeme[0] = c;
-        lexeme[1] = '\0';
-        return LPAREN;
-    }
-    else if (c == ')') {
-        lexeme[0] = c;
-        lexeme[1] = '\0';
-        return RPAREN;
-    }
-    else if (isalpha(c) || c == '_') {
-        lexeme[0] = c;
-        c = fgetc(stdin);
-        i = 1;
-        while (isalpha(c) || isdigit(c) || c == '_') {
-            lexeme[i] = c;
-            i++;
-            c = fgetc(stdin);
-        }
-        ungetc(c, stdin);
-        lexeme[i] = '\0';
-        return ID;
-    }
-    else {
-        return UNKNOWN;
-    }
-}
-
-//get a token and set lookahead
-void advance(void) {
-    lookahead = getToken();
-}
-
-//to see if the lookahead is match to the given token or not
-int match(TokenSet token) {
-    if (lookahead == UNKNOWN) advance();
-    return token == lookahead;
-}
-
-//get the golbal variable lexeme
-char* getLexeme(void) {
-    return lexeme;
-}
-
-//set x, y, z to the table
 void table_init() {
+    //set x, y, z to table
     table[0].name[0] = 'x';
     table[0].name[1] = '\0';
     table[0].val = 0;
@@ -202,15 +88,16 @@ void table_init() {
 void statement(void) {
     BTNode* retp;
     if (match(END)) {
+        //printf(">> ");
         advance();
     }
     else {
         retp = bit_or();
         if (match(END)) {
             if (retp->token != ASSIGN || retp->left->token != ID) {
-                syntax_error = 1;
+                flag = 1;
             }
-            if (!syntax_error) {
+            if (!flag) {
                 printAssemble(retp);
             }
             
@@ -331,7 +218,7 @@ BTNode* factor(void) {
             advance();
         }
         else {
-            syntax_error = 1;
+            error(NOTNUMID);
         }
     }
     else if (match(LPAREN)) {
@@ -341,11 +228,11 @@ BTNode* factor(void) {
             advance();
         }
         else {
-            syntax_error = 1;
+            error(MISPAREN);
         }
     }
     else {
-        syntax_error = 1;
+        error(NOTNUMID);
     }
     return retp;
 }
@@ -379,6 +266,61 @@ void printPrefix(BTNode *root) {
     }
 }
 
+/* traverse the syntax tree by pre-order
+ and evaluate the underlying expression */
+int evaluateTree(BTNode *root) {
+    int retval = 0, lv, rv;
+    if (root != NULL) {
+        switch (root->token) {
+            case ID:
+            case INT:
+                retval = root->val;
+                break;
+            case OR:
+            case XOR:
+            case AND:
+            case ASSIGN:
+            case ADDSUB:
+            case MULDIV:
+                lv = evaluateTree(root->left);
+                rv = evaluateTree(root->right);
+                if (strcmp(root->lexeme, "|") == 0) {
+                    retval = lv | rv;
+                }
+                else if (strcmp(root->lexeme, "^") == 0) {
+                    retval = lv ^ rv;
+                }
+                else if (strcmp(root->lexeme, "&") == 0) {
+                    retval = lv & rv;
+                }
+                else if (strcmp(root->lexeme, "+") == 0) {
+                    retval = lv + rv;
+                }
+                else if (strcmp(root->lexeme, "-") == 0) {
+                    retval = lv - rv;
+                }
+                else if (strcmp(root->lexeme, "*") == 0) {
+                    retval = lv * rv;
+                }
+                else if (strcmp(root->lexeme, "/") == 0) {
+                    if (rv == 0) {
+                        error(NAN);
+                    }
+                    else {
+                        retval = lv / rv;
+                    }
+                }
+                else if (strcmp(root->lexeme, "=") == 0) {
+                    retval = setval(root->left->lexeme, rv);
+                }
+                break;
+            default:
+                retval = 0;
+        }
+    }
+    return retval;
+}
+
 /*get the value of the token, if the token is an interger, then return it's value
  if the token is an ID, then return it's value, or add this ID to table */
 int getval(void) {
@@ -403,7 +345,7 @@ int getval(void) {
         }
         if (!found) {
             if (!firstID) {
-                syntax_error = 1;
+                flag = 1;
             }
             if (sbcount < TBLSIZE) {
                 strcpy(table[sbcount].name, getLexeme());
@@ -411,7 +353,7 @@ int getval(void) {
                 sbcount++;
             }
             else {
-                syntax_error = 1;
+                error(RUNOUT);
             }
         }
     }
@@ -434,21 +376,38 @@ int setval(char *str, int val) {
     return retval;
 }
 
+void error(ErrorType errorNum) {
+    /*
+     switch (errorNum) {
+     case MISPAREN:
+     fprintf(stderr, "Mismatched parenthesis\n");
+     break;
+     case NOTNUMID:
+     fprintf(stderr, "Number or identifier expected\n");
+     break;
+     case NOTFOUND:
+     fprintf(stderr, "%s not defined\n", getLexeme());
+     break;
+     case RUNOUT:
+     fprintf(stderr, "Out of memory\n");
+     break;
+     case NAN:
+     fprintf(stderr, "Not a number\n");
+     }
+     */
+    flag = 1;
+}
+
 int printAssemble(BTNode* root) {
     
     char c = root->lexeme[0];
-    /*
-     reg1 is the first register appear after the OP,
-     and reg2 is the second.
-    */
     int reg1, reg2, i, j;
     
     if (isdigit(c)) {
-        //to find which register is available to use
         for (i = 0; i < 8; i++) {
             if (reg_available[i]) break;
         }
-        reg_available[i] = 0; //set the register's status uesd
+        reg_available[i] = 0;
         printf("MOV r%d %d\n", i, root->val);
         return i;
     }
@@ -502,7 +461,6 @@ int printAssemble(BTNode* root) {
         return reg1;
     }
     else if (c == '=') {
-        //find the memory address of the variable appear before '='
         for (i = 0; i < sbcount; i++) {
             if (strcmp(root->left->lexeme, table[i].name) == 0) {
                 break;
@@ -527,3 +485,4 @@ int printAssemble(BTNode* root) {
     
     return 0;
 }
+
