@@ -47,7 +47,7 @@ int firstID;
 int main(int argc, char* argv[]) {
     char c;
     int i;
-    freopen("input.txt", "r", stdin);
+    //freopen("input.txt", "r", stdin);
     table_init();
     
     while (scanf("%c", &c) != EOF) {

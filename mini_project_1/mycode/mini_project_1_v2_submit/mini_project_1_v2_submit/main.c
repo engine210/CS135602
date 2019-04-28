@@ -29,6 +29,7 @@ typedef struct {
 
 typedef struct {
     char name[MAXLEN];
+    int hasVal;
     int val;
 } Symbol;
 
@@ -72,17 +73,21 @@ int sbcount = 0;
 int reg_available[8]; //indicate r0~r7 is available or not
 int syntax_error = 0;
 int firstID; //this ID is first ID appear in this expression or not
+int firstAssign;
 int firstExpr;
 
 int main(int argc, char* argv[]) {
     char c;
     int i;
+    #ifndef ONLINE_JUDGE
     freopen("input.txt", "r", stdin);
+    #endif
     table_init();
     firstExpr = 1;
     while (scanf("%c", &c) != EOF) {    //to determine whether the input is end
         ungetc(c, stdin);
         firstID = 1;
+        firstAssign = 1;
         for (i = 0; i < 3; i++) reg_available[i] = 0;
         for (i = 3; i < 8; i++) reg_available[i] = 1;   //set all register usable
         statement();
@@ -94,9 +99,6 @@ int main(int argc, char* argv[]) {
     }
     
     if (!syntax_error) {
-        //printf("MOV r0 [0]\n");
-        //printf("MOV r1 [4]\n");
-        //printf("MOV r2 [8]\n");
         printf("EXIT 0\n");
     }
     
@@ -206,12 +208,15 @@ void table_init() {
     table[0].name[0] = 'x';
     table[0].name[1] = '\0';
     table[0].val = 0;
+    table[0].hasVal = 0;
     table[1].name[0] = 'y';
     table[1].name[1] = '\0';
     table[1].val = 0;
+    table[1].hasVal = 0;
     table[2].name[0] = 'z';
     table[2].name[1] = '\0';
     table[2].val = 0;
+    table[2].hasVal = 0;
     sbcount = 3;
 }
 
@@ -327,6 +332,12 @@ BTNode* factor(void) {
         strcpy(tmpstr, getLexeme());
         advance();
         if (match(ASSIGN)) {
+            if (firstAssign) {
+                firstAssign = 0;
+            }
+            else {
+                syntax_error = 1;
+            }
             retp = makeNode(ASSIGN, getLexeme());
             advance();
             retp->right = bit_or();
@@ -358,7 +369,7 @@ BTNode* factor(void) {
     }
     else if (match(LPAREN)) {
         advance();
-        retp = bit_and();
+        retp = bit_or();
         if (match(RPAREN)) {
             advance();
         }
@@ -430,6 +441,7 @@ int getval(void) {
             if (sbcount < TBLSIZE) {
                 strcpy(table[sbcount].name, getLexeme());
                 table[sbcount].val = 0;
+                table[sbcount].hasVal = 0;
                 sbcount++;
             }
             else {
@@ -462,7 +474,7 @@ assert printAssemble(BTNode* root) {
     /*
      reg1 is the first register appear after the OP,
      and reg2 is the second.
-     */
+    */
     int i, j;
     assert reg1, reg2;
     
@@ -675,6 +687,11 @@ assert printAssemble(BTNode* root) {
         
         if (reg1.token == INT && reg2.token == INT) {
             reg1.token = INT;
+            if (reg2.value == 0) {
+                syntax_error = 1;
+                printf("EXIT 1\n");
+                exit(0);
+            }
             reg1.value = reg1.value / reg2.value;
             return reg1;
         }
@@ -694,6 +711,11 @@ assert printAssemble(BTNode* root) {
         else if (reg1.token == ID && reg2.token == INT) {
             for (i = 0; i < 8; i++) {
                 if (reg_available[i]) break;
+            }
+            if (reg2.value == 0) {
+                syntax_error = 1;
+                printf("EXIT 1\n");
+                exit(0);
             }
             printf("MOV r%d %d\n", i, reg2.value);
             printf("DIV r%d r%d\n", reg1.reg, i);
@@ -720,6 +742,7 @@ assert printAssemble(BTNode* root) {
             else {
                 printf("MOV [%d] r%d\n", i*4, reg2.reg);
             }
+            table[i].hasVal = 0;
         }
         else {
             for (j = 0; j < 8; j++) {
@@ -732,9 +755,23 @@ assert printAssemble(BTNode* root) {
             else {
                 printf("MOV [%d] r%d\n", i*4, j);
             }
+            table[i].hasVal = 1;
+            table[i].val = reg2.value;
         }
     }
     else if (isalpha(c) || c == '_') {
+        for (j = 0; j < sbcount; j++) {
+            if (strcmp(root->lexeme, table[j].name) == 0) {
+                break;
+            }
+        }
+        
+        if (table[j].hasVal) {
+            reg1.token = INT;
+            reg1.value = table[j].val;
+            return reg1;
+        }
+        
         for (i = 0; i < 8; i++) {
             if (reg_available[i]) break;
         }
@@ -749,11 +786,6 @@ assert printAssemble(BTNode* root) {
             printf("MOV r%d r2\n", i);
         }
         else {
-            for (j = 0; j < sbcount; j++) {
-                if (strcmp(root->lexeme, table[j].name) == 0) {
-                    break;
-                }
-            }
             printf("MOV r%d [%d]\n", i, j*4);
         }
         reg1.reg = i;
@@ -765,293 +797,3 @@ assert printAssemble(BTNode* root) {
     reg1.value = 0;
     return reg1;
 }
-/*
-assert printAssemble(BTNode* root) {
-    
-    char c = root->lexeme[0];
- 
-     //reg1 is the first register appear after the OP,
-     //and reg2 is the second.
- 
-    int i, j;
-    assert reg1, reg2;
-    
-    if (root->token == INT) {
-        reg1.token = INT;
-        reg1.value = root->val;
-        return reg1;
-    }
-    
-    if (c == '|') {
-        reg1 = printAssemble(root->left);
-        reg2 = printAssemble(root->right);
-        
-        if (reg1.token == INT && reg2.token == INT) {
-            reg1.token = INT;
-            reg1.value = reg1.value | reg2.value;
-            return reg1;
-        }
-        else if (reg1.token == INT && reg2.token == ID) {
-            //to find which register is available to use
-            for (i = 0; i < 8; i++) {
-                if (reg_available[i]) break;
-            }
-            printf("MOV r%d %d\n", i, reg1.value);
-            printf("OR r%d r%d\n", reg2.reg, i);
-            return reg2;
-        }
-        else if (reg1.token == ID && reg2.token == INT) {
-            for (i = 0; i < 8; i++) {
-                if (reg_available[i]) break;
-            }
-            printf("MOV r%d %d\n", i, reg2.value);
-            printf("OR r%d r%d\n", reg1.reg, i);
-            return reg1;
-        }
-        else {
-            printf("OR r%d r%d\n", reg1.reg, reg2.reg);
-            reg_available[reg2.reg] = 1;
-            reg1.token = ID;
-            return reg1;
-        }
-    }
-    else if (c == '^') {
-        reg1 = printAssemble(root->left);
-        reg2 = printAssemble(root->right);
-        
-        if (reg1.token == INT && reg2.token == INT) {
-            reg1.token = INT;
-            reg1.value = reg1.value ^ reg2.value;
-            return reg1;
-        }
-        else if (reg1.token == INT && reg2.token == ID) {
-            //to find which register is available to use
-            for (i = 0; i < 8; i++) {
-                if (reg_available[i]) break;
-            }
-            printf("MOV r%d %d\n", i, reg1.value);
-            printf("XOR r%d r%d\n", reg2.reg, i);
-            return reg2;
-        }
-        else if (reg1.token == ID && reg2.token == INT) {
-            for (i = 0; i < 8; i++) {
-                if (reg_available[i]) break;
-            }
-            printf("MOV r%d %d\n", i, reg2.value);
-            printf("XOR r%d r%d\n", reg1.reg, i);
-            return reg1;
-        }
-        else {
-            printf("XOR r%d r%d\n", reg1.reg, reg2.reg);
-            reg_available[reg2.reg] = 1;
-            return reg1;
-        }
-    }
-    else if (c == '&') {
-        reg1 = printAssemble(root->left);
-        reg2 = printAssemble(root->right);
-        
-        if (reg1.token == INT && reg2.token == INT) {
-            reg1.token = INT;
-            reg1.value = reg1.value & reg2.value;
-            return reg1;
-        }
-        else if (reg1.token == INT && reg2.token == ID) {
-            //to find which register is available to use
-            for (i = 0; i < 8; i++) {
-                if (reg_available[i]) break;
-            }
-            printf("MOV r%d %d\n", i, reg1.value);
-            printf("AND r%d r%d\n", reg2.reg, i);
-            return reg2;
-        }
-        else if (reg1.token == ID && reg2.token == INT) {
-            for (i = 0; i < 8; i++) {
-                if (reg_available[i]) break;
-            }
-            printf("MOV r%d %d\n", i, reg2.value);
-            printf("AND r%d r%d\n", reg1.reg, i);
-            return reg1;
-        }
-        else {
-            printf("AND r%d r%d\n", reg1.reg, reg2.reg);
-            reg_available[reg2.reg] = 1;
-            return reg1;
-        }
-    }
-    else if (c == '+') {
-        reg1 = printAssemble(root->left);
-        reg2 = printAssemble(root->right);
-        
-        if (reg1.token == INT && reg2.token == INT) {
-            reg1.token = INT;
-            reg1.value = reg1.value + reg2.value;
-            return reg1;
-        }
-        else if (reg1.token == INT && reg2.token == ID) {
-            //to find which register is available to use
-            for (i = 0; i < 8; i++) {
-                if (reg_available[i]) break;
-            }
-            printf("MOV r%d %d\n", i, reg1.value);
-            printf("ADD r%d r%d\n", reg2.reg, i);
-            return reg2;
-        }
-        else if (reg1.token == ID && reg2.token == INT) {
-            for (i = 0; i < 8; i++) {
-                if (reg_available[i]) break;
-            }
-            printf("MOV r%d %d\n", i, reg2.value);
-            printf("ADD r%d r%d\n", reg1.reg, i);
-            return reg1;
-        }
-        else {
-            printf("ADD r%d r%d\n", reg1.reg, reg2.reg);
-            reg_available[reg2.reg] = 1;
-            return reg1;
-        }
-    }
-    else if (c == '-') {
-        reg1 = printAssemble(root->left);
-        reg2 = printAssemble(root->right);
-        
-        if (reg1.token == INT && reg2.token == INT) {
-            reg1.token = INT;
-            reg1.value = reg1.value - reg2.value;
-            return reg1;
-        }
-        else if (reg1.token == INT && reg2.token == ID) {
-            //to find which register is available to use
-            for (i = 0; i < 8; i++) {
-                if (reg_available[i]) break;
-            }
-            reg_available[i] = 0;
-            printf("MOV r%d %d\n", i, reg1.value);
-            printf("SUB r%d r%d\n", i, reg2.reg);
-            reg_available[reg2.reg] = 1;
-            reg1.token = ID;
-            reg1.reg = i;
-            return reg1;
-        }
-        else if (reg1.token == ID && reg2.token == INT) {
-            for (i = 0; i < 8; i++) {
-                if (reg_available[i]) break;
-            }
-            printf("MOV r%d %d\n", i, reg2.value);
-            printf("SUB r%d r%d\n", reg1.reg, i);
-            return reg1;
-        }
-        else {
-            printf("SUB r%d r%d\n", reg1.reg, reg2.reg);
-            reg_available[reg2.reg] = 1;
-            return reg1;
-        }
-    }
-    else if (c == '*') {
-        reg1 = printAssemble(root->left);
-        reg2 = printAssemble(root->right);
-        
-        if (reg1.token == INT && reg2.token == INT) {
-            reg1.token = INT;
-            reg1.value = reg1.value * reg2.value;
-            return reg1;
-        }
-        else if (reg1.token == INT && reg2.token == ID) {
-            //to find which register is available to use
-            for (i = 0; i < 8; i++) {
-                if (reg_available[i]) break;
-            }
-            printf("MOV r%d %d\n", i, reg1.value);
-            printf("MUL r%d r%d\n", reg2.reg, i);
-            return reg2;
-        }
-        else if (reg1.token == ID && reg2.token == INT) {
-            for (i = 0; i < 8; i++) {
-                if (reg_available[i]) break;
-            }
-            printf("MOV r%d %d\n", i, reg2.value);
-            printf("MUL r%d r%d\n", reg1.reg, i);
-            return reg1;
-        }
-        else {
-            printf("MUL r%d r%d\n", reg1.reg, reg2.reg);
-            reg_available[reg2.reg] = 1;
-            return reg1;
-        }
-    }
-    else if (c == '/') {
-        reg1 = printAssemble(root->left);
-        reg2 = printAssemble(root->right);
-        
-        if (reg1.token == INT && reg2.token == INT) {
-            reg1.token = INT;
-            reg1.value = reg1.value / reg2.value;
-            return reg1;
-        }
-        else if (reg1.token == INT && reg2.token == ID) {
-            //to find which register is available to use
-            for (i = 0; i < 8; i++) {
-                if (reg_available[i]) break;
-            }
-            reg_available[i] = 0;
-            printf("MOV r%d %d\n", i, reg1.value);
-            printf("DIV r%d r%d\n", i, reg2.reg);
-            reg_available[reg2.reg] = 1;
-            reg1.token = ID;
-            reg1.reg = i;
-            return reg1;
-        }
-        else if (reg1.token == ID && reg2.token == INT) {
-            for (i = 0; i < 8; i++) {
-                if (reg_available[i]) break;
-            }
-            printf("MOV r%d %d\n", i, reg2.value);
-            printf("DIV r%d r%d\n", reg1.reg, i);
-            return reg1;
-        }
-        else {
-            printf("DIV r%d r%d\n", reg1.reg, reg2.reg);
-            reg_available[reg2.reg] = 1;
-            return reg1;
-        }
-    }
-    else if (c == '=') {
-        //find the memory address of the variable appear before '='
-        for (i = 0; i < sbcount; i++) {
-            if (strcmp(root->left->lexeme, table[i].name) == 0) {
-                break;
-            }
-        }
-        reg2 = printAssemble(root->right);
-        if (reg2.token == ID) {
-            printf("MOV [%d] r%d\n", i*4, reg2.reg);
-        }
-        else {
-            for (j = 0; j < 8; j++) {
-                if (reg_available[j]) break;
-            }
-            printf("MOV r%d %d\n", j, reg2.value);
-            printf("MOV [%d] r%d\n", i*4, j);
-        }
-    }
-    else if (isalpha(c) || c == '_') {
-        for (i = 0; i < 8; i++) {
-            if (reg_available[i]) break;
-        }
-        reg_available[i] = 0;
-        for (j = 0; j < sbcount; j++) {
-            if (strcmp(root->lexeme, table[j].name) == 0) {
-                break;
-            }
-        }
-        printf("MOV r%d [%d]\n", i, j*4);
-        reg1.token = ID;
-        reg1.reg = i;
-        return reg1;
-    }
-    
-    reg1.token = INT;
-    reg1.value = 0;
-    return reg1;
-}
-*/

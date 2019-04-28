@@ -299,6 +299,7 @@ void statement(void) {
 }
 
 int main() {
+    freopen("input.txt", "r", stdin);
     printf(">> ");
     while (1) {
         statement();
