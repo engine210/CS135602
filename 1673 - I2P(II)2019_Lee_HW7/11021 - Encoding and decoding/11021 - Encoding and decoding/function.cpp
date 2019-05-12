@@ -13,7 +13,7 @@
 #include "function.hpp"
 
 void RleCodec::encode() {
-    std::ostringstream os;
+    std::stringstream os;
     char pre = code_str[0];
     int cnt = 0;
     char strNum;
