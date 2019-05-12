@@ -1,0 +1,17 @@
+size
+capacity
+push_back 5
+push_back 4
+push_back 3
+push_back 2
+push_back 1
+pop_back
+pop_back
+pop_back
+pop_back
+resize 5
+size
+capacity
+reserve 0
+resize 0
+insert 0 2 4
