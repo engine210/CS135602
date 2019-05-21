@@ -53,19 +53,21 @@ bool Iterator::operator!=(const Iterator &it) const {
 }
 
 void Iterator::operator++(int) {
-    if (!(((Content*)data)->s.empty()) && ((Content*)data)->s.top() != nullptr) {
-        Node* cur = ((Content*)data)->s.top();
-        ((Content*)data)->s.pop();
-        if (((Content*)data)->s.empty()) {
-            ((Content*)data)->s.push(nullptr);
+    stack<Node*>& s = ((Content*)data)->s;
+    if (!(s.empty()) && s.top() != nullptr) {
+        Node* cur = s.top();
+        s.pop();
+        if (s.empty()) {
+            s.push(nullptr);
         }
         if (cur) {
             if (cur->right) {
-                ((Content*)data)->s.push(cur->right);
+                s.push(cur->right);
             }
             if (cur->left) {
-                ((Content*)data)->s.push(cur->left);
+                s.push(cur->left);
             }
         }
     }
 }
+
