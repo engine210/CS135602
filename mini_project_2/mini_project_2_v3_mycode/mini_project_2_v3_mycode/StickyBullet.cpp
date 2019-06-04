@@ -20,7 +20,7 @@
 class Turret;
 
 StickyBullet::StickyBullet(Engine::Point position, Engine::Point forwardDirection, float rotation, Turret* parent) :
-Bullet("play/bullet-1.png", 500, 1, position, forwardDirection, rotation - ALLEGRO_PI / 2, parent) {
+Bullet("play/bullet-1.png", 1500, 5, position, forwardDirection, rotation - ALLEGRO_PI / 2, parent) {
     // TODO 2 (1/8): You can imitate the 2 files: 'FireBullet.hpp', 'FireBullet.cpp' to create a new bullet.
 }
 void StickyBullet::OnExplode(Enemy* enemy) {

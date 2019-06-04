@@ -17,10 +17,10 @@
 #include "PlayScene.hpp"
 #include "Point.hpp"
 
-const int StickyTurret::Price = 50;
+const int StickyTurret::Price = 400;
 StickyTurret::StickyTurret(float x, float y) :
 // TODO 2 (2/8): You can imitate the 2 files: 'MachineGunTurret.hpp', 'MachineGunTurret.cpp' to create a new turret.
-Turret("play/tower-base.png", "play/turret-6.png", x, y, 200, Price, 0.5) {
+Turret("play/tower-base.png", "play/turret-6.png", x, y, 400, Price, 0.1) {
     // Move center downward, since we the turret head is slightly biased upward.
     Anchor.y += 8.0f / GetBitmapHeight();
 }

@@ -18,9 +18,10 @@
 #include "Turret.hpp"
 #include "list"
 
-RedTankEnemy::RedTankEnemy(int x, int y) : Enemy("play/enemy-5-2.png", x, y, 20, 20, 10, 200), head("play/enemy-5-head.png", x, y), targetRotation(0) {
+RedTankEnemy::RedTankEnemy(int x, int y) : Enemy("play/enemy-5-2.png", x, y, 20, 20, 50, 200), head("play/enemy-5-head.png", x, y), targetRotation(0) {
     CollisionRadius = 200;
     coolDown = 0.5;
+    smallRadius = 20;
 }
 
 void RedTankEnemy::Draw() const {

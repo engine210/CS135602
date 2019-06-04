@@ -46,14 +46,16 @@ Engine::Point PlayScene::GetClientSize() {
 	return Engine::Point(MapWidth * BlockSize, MapHeight * BlockSize);
 }
 std::vector<std::vector<PlayScene::TileType>> PlayScene::mapState;
+std::vector<std::vector<PlayScene::TileType>> PlayScene::oriMapState;
 void PlayScene::Initialize() {
 	// TODO_DONE 5 (1/2): There's a bug in this file, which crashes the game when you win. Try to find it.
 	// TODO 5 (2/2): There's a cheat code in this file. Try to find it.
 	mapState.clear();
+    oriMapState.clear();
 	keyStrokes.clear();
 	ticks = 0;
 	lives = 10;
-	money = 150;
+	money = 350;
 	SpeedMult = 1;
 	// Add groups from bottom to top.
 	AddNewObject(TileMapGroup = new Group());
@@ -292,6 +294,7 @@ void PlayScene::ReadMap() {
 		throw std::ios_base::failure("Map data is corrupted.");
 	// Store map in 2d array.
 	mapState = std::vector<std::vector<TileType>>(MapHeight, std::vector<TileType>(MapWidth));
+    oriMapState = std::vector<std::vector<TileType>>(MapHeight, std::vector<TileType>(MapWidth));;
 	for (int i = 0; i < MapHeight; i++) {
 		for (int j = 0; j < MapWidth; j++) {
 			const int num = mapData[i * MapWidth + j];
