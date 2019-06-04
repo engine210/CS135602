@@ -39,11 +39,12 @@ void Slider::OnMouseDown(int button, int mx, int my) {
 void Slider::OnMouseUp(int button, int mx, int my) {
 	// TODO_DONE 4 (5/6): Set 'Down' to false.
     Down = false;
+    bmp = imgOut;
 }
 void Slider::OnMouseMove(int mx, int my) {
 	// TODO_DONE 4 (6/6): Clamp the coordinates and calculate the value. Call 'SetValue' when you're done.
     mouseIn = Engine::Collider::IsPointInBitmap(Engine::Point((mx - Position.x) * GetBitmapWidth() / Size.x + Anchor.x * GetBitmapWidth(), (my - Position.y) * GetBitmapHeight() / Size.y + Anchor.y * GetBitmapHeight()), bmp);
-    if (mouseIn) {
+    if (mouseIn || Down) {
         bmp = imgIn;
     }
     else {
