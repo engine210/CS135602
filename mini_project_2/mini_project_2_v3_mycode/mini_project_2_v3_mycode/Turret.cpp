@@ -103,7 +103,7 @@ void Turret::Hit(float damage) {
         for (auto& it: lockedEnemyBullets)
             it->Target = nullptr;
         getPlayScene()->TowerGroup->RemoveObject(objectIterator);
-        PlayScene::mapState[Position.y/PlayScene::BlockSize-1/2][Position.x/PlayScene::BlockSize-1/2] = PlayScene::TILE_FLOOR;// PlayScene::oriMapState[Position.y/PlayScene::BlockSize-1/2][Position.x/PlayScene::BlockSize-1/2];
+        PlayScene::mapState[Position.y/PlayScene::BlockSize-1/2][Position.x/PlayScene::BlockSize-1/2] = PlayScene::oriMapState[Position.y/PlayScene::BlockSize-1/2][Position.x/PlayScene::BlockSize-1/2];
         AudioHelper::PlayAudio("explosion.wav");
     }
 }

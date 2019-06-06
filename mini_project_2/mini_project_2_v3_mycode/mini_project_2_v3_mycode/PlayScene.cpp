@@ -305,6 +305,7 @@ void PlayScene::ReadMap() {
 				TileMapGroup->AddNewObject(new Engine::Image("play/dirt.png", j * BlockSize, i * BlockSize, BlockSize, BlockSize));
 		}
 	}
+    oriMapState.assign(mapState.begin(), mapState.end());
 }
 void PlayScene::ReadEnemyWave() {
 	std::string filename = std::string("resources/enemy") + std::to_string(MapId) + ".txt";
