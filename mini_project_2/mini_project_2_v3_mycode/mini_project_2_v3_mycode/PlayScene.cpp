@@ -99,8 +99,14 @@ void PlayScene::Update(float deltaTime) {
                 //delete imgTarget;
 				// Win.
                 */
+                if (MapId == 10) {
+                    Engine::GameEngine::GetInstance().ChangeScene("win");
+                }
+                else {
+                    MapId++;
+                    Engine::GameEngine::GetInstance().ChangeScene("next");
+                }
                 
-				Engine::GameEngine::GetInstance().ChangeScene("win");
 			}
 			continue;
 		}

@@ -11,7 +11,7 @@
 #include <string>
 
 #include "AudioHelper.hpp"
-#include "FireBullet.hpp"
+#include "StickyBullet.hpp"
 #include "Group.hpp"
 #include "StickyTurret.hpp"
 #include "PlayScene.hpp"
@@ -23,12 +23,13 @@ StickyTurret::StickyTurret(float x, float y) :
 Turret("play/tower-base.png", "play/turret-6.png", x, y, 400, Price, 0.1) {
     // Move center downward, since we the turret head is slightly biased upward.
     Anchor.y += 8.0f / GetBitmapHeight();
+    hp = 50;
 }
 void StickyTurret::CreateBullet() {
     Engine::Point diff = Engine::Point(cos(Rotation - ALLEGRO_PI / 2), sin(Rotation - ALLEGRO_PI / 2));
     float rotation = atan2(diff.y, diff.x);
     Engine::Point normalized = diff.Normalize();
     // Change bullet position to the front of the gun barrel.
-    getPlayScene()->BulletGroup->AddNewObject(new FireBullet(Position + normalized * 36, diff, rotation, this));
-    AudioHelper::PlayAudio("gun.wav");
+    getPlayScene()->BulletGroup->AddNewObject(new StickyBullet(Position + normalized * 36, diff, rotation, this));
+    AudioHelper::PlayAudio("laser.wav");
 }
