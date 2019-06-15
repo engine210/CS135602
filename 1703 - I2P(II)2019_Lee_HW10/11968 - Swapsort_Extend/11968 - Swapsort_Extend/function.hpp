@@ -20,8 +20,7 @@ using namespace std;
 using State = vector<int>;
 
 
-class SwapSort
-{
+class SwapSort {
 private:
     set<list<State>> _paths;
     set<list<State>> _solutions;

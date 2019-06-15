@@ -7,3 +7,7 @@
 //
 
 #include "function.hpp"
+
+set<State> SwapSort::extend(State s) {
+    
+}
